@@ -7,6 +7,7 @@ from copy import deepcopy
 import sklearn
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
+from robo.fmin import bayesian_optimization
 
 rf = pickle.load(open("./rf_surrogate_cnn.pkl", "rb"))
 cost_rf = pickle.load(open("./rf_cost_surrogate_cnn.pkl", "rb"))
