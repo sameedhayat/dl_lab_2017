@@ -106,7 +106,7 @@ def main():
     plt.legend(bbox_to_anchor=(1.05, 1), loc=2)
     plt.xlabel('number of iterations')
     plt.ylabel('training loss')
-    plt.savefig('loss.png')
+    plt.savefig('./loss.png')
     plt.show()
     
 if __name__ == "__main__":
