@@ -1,9 +1,10 @@
+import matplotlib
+matplotlib.use('Agg')
 import pickle
 import numpy as np
 import sys
 from copy import deepcopy
 import sklearn
-import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 
