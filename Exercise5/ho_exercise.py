@@ -108,8 +108,8 @@ def plot_and_save(rs, bo, xlabel_value, ylabel_value, path_to_png):
     """
         plot and save the figure
     """
-    plt.plot(range(1,len(rs) + 1), rs, color="green", linewidth=2.5, linestyle="-", label="Random Search")
-    plt.plot(range(1,len(bo) + 1), bo, color="blue", linewidth=2.5, linestyle="-", label="Bayesian Optimization")
+    plt.plot(range(iterations), rs, color="green", linewidth=2.5, linestyle="-", label="Random Search")
+    plt.plot(range(iterations), bo, color="blue", linewidth=2.5, linestyle="-", label="Bayesian Optimization")
     plt.legend(loc='upper right', frameon=False)
     plt.xlabel(xlabel_value)
     plt.ylabel(ylabel_value)
@@ -120,8 +120,8 @@ def plot_and_save(rs, bo, xlabel_value, ylabel_value, path_to_png):
 def main():
     rs_performance, rs_runtime = random_search()
     bo_performance, bo_runtime = bayesian()
-    plot_and_save(rs_performance, bo_performance, "Performance", "Iterations", "performance.png")
-    plot_and_save(rs_runtime, bo_runtime, "Runtime", "Iterations", "performance.png")
+    plot_and_save(rs_performance, bo_performance, "Iterations", "Performance", "runtime.png")
+    plot_and_save(rs_runtime, bo_runtime, "Iterations", "Runtime", "performance.png")
 
     
 if __name__ == "__main__":
