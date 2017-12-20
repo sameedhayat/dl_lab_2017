@@ -95,7 +95,7 @@ def bayesian():
     performance_values = list()
     runtime_values = list()
     for i in range(runs):
-        output_value = bayesian_optimization(objective_function, lower, upper, num_iterations=iterations)
+        output_value = bayesian_optimization(objective_function, np.array(lower), np.array(upper), num_iterations=iterations)
         performance_values.append(output_value['incumbent_values'])
         runtime_values.append(output_value['runtime'])
 
