@@ -9,12 +9,12 @@ import matplotlib.image as mpimg
 from copy import deepcopy
 from robo.fmin import bayesian_optimization
 
-rf = pickle.load(open("./rf_surrogate_cnn.pkl", "rb"))
-cost_rf = pickle.load(open("./rf_cost_surrogate_cnn.pkl", "rb"))
-lower = [-6, 32, 4, 4, 4]
-upper = [0, 512, 10, 10, 10]
 runs = 10
 iterations = 50
+lower = [-6, 32, 4, 4, 4]
+upper = [0, 512, 10, 10, 10]
+rf = pickle.load(open("./rf_surrogate_cnn.pkl", "rb"))
+cost_rf = pickle.load(open("./rf_cost_surrogate_cnn.pkl", "rb"))
 
   
 def get_random_hyperparameters_list():
@@ -31,7 +31,6 @@ def objective_function(x, epoch=40):
         The original surrogate predicts the validation error after a given epoch. Since all hyperparameter configurations were trained for a total amount of 
         40 epochs, we will query the performance after epoch 40.
     """
-    
     # Normalize all hyperparameter to be in [0, 1]
     x_norm = deepcopy(x)
     x_norm[0] = (x[0] - (-6)) / (0 - (-6))
@@ -40,17 +39,16 @@ def objective_function(x, epoch=40):
     x_norm[3] = (x[3] - 4) / (10 - 4)
     x_norm[4] = (x[4] - 4) / (10 - 4)
     
-
     x_norm = np.append(x_norm, epoch)
     y = rf.predict(x_norm[None, :])[0]
 
     return y
 
+
 def runtime(x, epoch=40):
     """
         Function wrapper to approximate the runtime of the hyperparameter configurations x.
     """
-    
     # Normalize all hyperparameter to be in [0, 1]
     x_norm = deepcopy(x)
     x_norm[0] = (x[0] - (-6)) / (0 - (-6))
@@ -59,11 +57,11 @@ def runtime(x, epoch=40):
     x_norm[3] = (x[3] - 4) / (10 - 4)
     x_norm[4] = (x[4] - 4) / (10 - 4)
     
-
     x_norm = np.append(x_norm, epoch)
     y = cost_rf.predict(x_norm[None, :])[0]
 
     return y
+
 
 def random_search():
     """
@@ -89,6 +87,7 @@ def random_search():
     runtime_mean = np.cumsum(np.mean(runtime_values, axis=0), axis=0)
     return performance_mean, runtime_mean
 
+
 def bayesian_optimization():
     """
         Bayesian optimization implementation
@@ -105,7 +104,6 @@ def bayesian_optimization():
     return performance_mean, runtime_mean
     
 
-
 def plot_and_save(rs, bo, xlabel_value, ylabel_value, path_to_png):
     """
         plot and save the figure
@@ -117,12 +115,14 @@ def plot_and_save(rs, bo, xlabel_value, ylabel_value, path_to_png):
     plt.ylabel(ylabel_value)
     plt.savefig(path_to_png)
     plt.show()
-    
+
+   
 def main():
     rs_performance, rs_runtime = random_search()
     bo_performance, bo_runtime = bayesian_optimization()
     plot_and_save(rs_performance, bo_performance, "Performance", "Iterations", "performance.png")
     plot_and_save(rs_runtime, bo_runtime, "Runtime", "Iterations", "performance.png")
+
     
 if __name__ == "__main__":
     main()
