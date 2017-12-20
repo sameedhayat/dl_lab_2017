@@ -7,34 +7,23 @@ from copy import deepcopy
 import sklearn
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
-from robo.fmin import bayesian_optimization
+#from robo.fmin import bayesian_optimization
 
 rf = pickle.load(open("./rf_surrogate_cnn.pkl", "rb"))
 cost_rf = pickle.load(open("./rf_cost_surrogate_cnn.pkl", "rb"))
-learning_rate = [-6, 0]
-batch_size = [32, 512]
-filter_layer1 = [4, 10]
-filter_layer2 = [4, 10]
-filter_layer3 = [4, 10]
+lower = [-6, 32, 4, 4, 4]
+upper = [0, 512, 10, 10, 10]
+runs = 10
+iterations = 50
 
-def get_random_from_range(x):
-    """
-        Get random number between the lower and upper bound
-    """
-    return np.random.uniform(x[0], x[1])
-    
+  
 def get_random_hyperparameters_list():
     """
         Get random list of hyperparameters
     """
-    ret = list()
-    ret.append(get_random_from_range(learning_rate))
-    ret.append(get_random_from_range(batch_size))
-    ret.append(get_random_from_range(filter_layer1))
-    ret.append(get_random_from_range(filter_layer2))
-    ret.append(get_random_from_range(filter_layer3))
-    return ret
+    return [np.random.uniform(l, u) for l, u in zip(lower, upper)]
     
+
 def objective_function(x, epoch=40):
     """
         Function wrapper to approximate the validation error of the hyperparameter configurations x by the prediction of a surrogate regression model,
@@ -80,8 +69,6 @@ def random_search():
     """
         Random search implementation
     """
-    runs = 10
-    iterations = 50
     optimal_value = sys.maxsize
     performance_values = np.zeros(shape=(runs, iterations))
     runtime_values = np.zeros(shape=(runs, iterations))
@@ -101,15 +88,41 @@ def random_search():
     performance_mean = np.mean(performance_values, axis=0)
     runtime_mean = np.cumsum(np.mean(runtime_values, axis=0), axis=0)
     return performance_mean, runtime_mean
-            
-def main():
-    performance_mean, runtime_mean = random_search()
-    plt.plot(range(1,len(performance_mean) + 1), performance_mean)
-    plt.legend(bbox_to_anchor=(1.05, 1), loc=2)
-    plt.xlabel('number of iterations')
-    plt.ylabel('training loss')
-    plt.savefig('./loss.png')
+
+def bayesian_optimization():
+    """
+        Bayesian optimization implementation
+    """
+    performance_values = list()
+    runtime_values = list()
+    for i in range(runs):
+        output_value = bayesian_optimization(objective_function, lower, upper, num_iterations=iterations)
+        performance_values.append(output_value['incumbent_values'])
+        runtime_values.append(output_value['runtime'])
+
+    performance_mean = np.mean(performance_values, axis=0)
+    runtime_mean = np.cumsum(np.mean(runtime_values, axis=0), axis=0)
+    return performance_mean, runtime_mean
+    
+
+
+def plot_and_save(rs, bo, xlabel_value, ylabel_value, path_to_png):
+    """
+        plot and save the figure
+    """
+    plt.plot(range(1,len(rs) + 1), rs, color="green", linewidth=2.5, linestyle="-", label="Random Search")
+    plt.plot(range(1,len(bo) + 1), bo, color="blue", linewidth=2.5, linestyle="-", label="Bayesian Optimization")
+    plt.legend(loc='upper right', frameon=False)
+    plt.xlabel(xlabel_value)
+    plt.ylabel(ylabel_value)
+    plt.savefig(path_to_png)
     plt.show()
+    
+def main():
+    rs_performance, rs_runtime = random_search()
+    bo_performance, bo_runtime = bayesian_optimization()
+    plot_and_save(rs_performance, bo_performance, "Performance", "Iterations", "performance.png")
+    plot_and_save(rs_runtime, bo_runtime, "Runtime", "Iterations", "performance.png")
     
 if __name__ == "__main__":
     main()
