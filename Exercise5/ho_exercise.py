@@ -88,7 +88,7 @@ def random_search():
     return performance_mean, runtime_mean
 
 
-def bayesian_optimization():
+def bayesian():
     """
         Bayesian optimization implementation
     """
@@ -119,7 +119,7 @@ def plot_and_save(rs, bo, xlabel_value, ylabel_value, path_to_png):
    
 def main():
     rs_performance, rs_runtime = random_search()
-    bo_performance, bo_runtime = bayesian_optimization()
+    bo_performance, bo_runtime = bayesian()
     plot_and_save(rs_performance, bo_performance, "Performance", "Iterations", "performance.png")
     plot_and_save(rs_runtime, bo_runtime, "Runtime", "Iterations", "performance.png")
 
