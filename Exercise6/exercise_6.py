@@ -2,6 +2,8 @@ import numpy as np
 import pickle
 import argparse
 import ConfigSpace as CS
+import matplotlib
+matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import logging
 
@@ -50,17 +52,18 @@ def create_config_space():
 
     StepDecay_epochs_per_step = CS.UniformIntegerHyperparameter("StepDecay_epochs_per_step",
                                                lower=1,
+                                               upper=128,
                                                default_value=16,
-                                               upper=128)
+                                               log=False)
 
     activation = CS.CategoricalHyperparameter("activation",
-                                              ['relu', 'tanh'],
+                                              ["relu", "tanh"],
                                               default_value="relu")
 
     batch_size = CS.UniformIntegerHyperparameter("batch_size",
                                                lower=8,
-                                               default_value=16,
                                                upper=256,
+                                               default_value=16,
                                                log = True)
 
     dropout_0 = CS.UniformFloatHyperparameter('dropout_0',
@@ -121,40 +124,101 @@ def create_config_space():
 
     num_layers = CS.UniformIntegerHyperparameter("num_layers",
                                                lower=1,
+                                               upper=4,
                                                default_value=2,
-                                               upper=4)
+                                               log=False
+                                               )
 
     num_units_0 = CS.UniformIntegerHyperparameter("num_units_0",
                                                lower=16,
-                                               default_value=32,
                                                upper=256,
+                                               default_value=32,
                                                log=True)
 
     num_units_1 = CS.UniformIntegerHyperparameter("num_units_1",
                                                lower=16,
-                                               default_value=32,
                                                upper=256,
+                                               default_value=32,
                                                log=True)
 
     num_units_2 = CS.UniformIntegerHyperparameter("num_units_2",
                                                lower=16,
-                                               default_value=256,
-                                               upper=32,
+                                               upper=256,
+                                               default_value=32,
                                                log=True)
 
     num_units_3 = CS.UniformIntegerHyperparameter("num_units_3",
                                                lower=16,
-                                               default_value=256,
-                                               upper=32,
+                                               upper=256,
+                                               default_value=32,
                                                log=True)
 
     optimizer = CS.CategoricalHyperparameter("optimizer",
-                                             ['Adam', 'SGD'],
+                                             ["Adam", "SGD"],
                                              default_value = 'Adam')
 
     output_activation = CS.CategoricalHyperparameter("output_activation",
-                                                     ['softmax'],
-                                                     default_value = 'softmax')
+                                                     ["softmax"],
+                                                     default_value = "softmax")
+
+    #Adding hyperparameters to config space
+    cs.add_hyperparameter(Adam_final_lr_fraction)
+    cs.add_hyperparameter(Adam_initial_lr)
+    cs.add_hyperparameter(SGD_final_lr_fraction)
+    cs.add_hyperparameter(SGD_initial_lr)
+    cs.add_hyperparameter(SGD_momentum)
+    cs.add_hyperparameter(StepDecay_epochs_per_step)
+    cs.add_hyperparameter(activation)
+    cs.add_hyperparameter(batch_size)
+    cs.add_hyperparameter(dropout_0)
+    cs.add_hyperparameter(dropout_1)
+    cs.add_hyperparameter(dropout_2)
+    cs.add_hyperparameter(dropout_3)
+    cs.add_hyperparameter(l2_reg_0)
+    cs.add_hyperparameter(l2_reg_1)
+    cs.add_hyperparameter(l2_reg_2)
+    cs.add_hyperparameter(l2_reg_3)
+    cs.add_hyperparameter(learning_rate_schedule)
+    cs.add_hyperparameter(loss_function)
+    cs.add_hyperparameter(num_layers)
+    cs.add_hyperparameter(num_units_0)
+    cs.add_hyperparameter(num_units_1)
+    cs.add_hyperparameter(num_units_2)
+    cs.add_hyperparameter(num_units_3)
+    cs.add_hyperparameter(optimizer)
+    cs.add_hyperparameter(output_activation)
+
+    #conditions
+    cond = CS.EqualsCondition(Adam_final_lr_fraction, optimizer, 'Adam')
+    cs.add_condition(cond)
+    cond = CS.EqualsCondition(Adam_initial_lr, optimizer, 'Adam')
+    cs.add_condition(cond)
+    cond = CS.EqualsCondition(SGD_final_lr_fraction, optimizer, 'SGD')
+    cs.add_condition(cond)
+    cond = CS.EqualsCondition(SGD_initial_lr, optimizer, 'SGD')
+    cs.add_condition(cond)
+    cond = CS.EqualsCondition(SGD_momentum, optimizer, 'SGD')
+    cs.add_condition(cond)
+    cond = CS.EqualsCondition(StepDecay_epochs_per_step, learning_rate_schedule, 'StepDecay')
+    cs.add_condition(cond)
+    cond = CS.GreaterThanCondition(dropout_1, num_layers, 2)
+    cs.add_condition(cond)
+    cond = CS.GreaterThanCondition(dropout_2, num_layers, 3)
+    cs.add_condition(cond)
+    cond = CS.EqualsCondition(dropout_3, num_layers, 4)
+    cs.add_condition(cond)
+    cond = CS.GreaterThanCondition(l2_reg_1, num_layers, 2)
+    cs.add_condition(cond)
+    cond = CS.GreaterThanCondition(l2_reg_2, num_layers, 3)
+    cs.add_condition(cond)
+    cond = CS.EqualsCondition(l2_reg_3, num_layers, 4)
+    cs.add_condition(cond)
+    cond = CS.GreaterThanCondition(num_units_1, num_layers, 2)
+    cs.add_condition(cond)
+    cond = CS.GreaterThanCondition(num_units_2, num_layers, 3)
+    cs.add_condition(cond)
+    cond = CS.EqualsCondition(num_units_3, num_layers, 4)
+    cs.add_condition(cond)
 
     return cs
 
@@ -182,7 +246,6 @@ class WorkerWrapper(Worker):
 
 
 if __name__ == '__main__':
-
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--run_smac', action='store_true')
@@ -230,13 +293,24 @@ if __name__ == '__main__':
             incumbents.append(inc)
             incumbent_performance.append(inc_value)
 
-        # TODO: save and plot the wall clock time and the validation of the incumbent after each iteration here
+        f, (ax1, ax2) = plt.subplots(nrows=2, sharey=False)
+        ax1.set_xlabel("Wall Clock Time")
+        ax1.set_ylabel("Incumbent Performance")
+        ax1.plot(wall_clock_time, incumbent_performance)
+        ax1.set_title('SMAC')
 
         lc_smac = []
-        for d in rh.data:
+        for i, d in enumerate(rh.data):
             lc_smac.append(rh.data[d].additional_info["learning_curve"])
 
-        # TODO: save and plot all learning curves here
+
+        ax2.plot(lc_smac)
+        ax2.set_xlabel("No of Iterations")
+        ax2.set_ylabel("Error")
+        ax2.set_title('SMAC learning curves')
+        plt.tight_layout()
+        f.savefig('SMAC.png')
+        plt.show()
 
     if args["run_hyperband"]:
         nameserver, ns_port = hpbandster.distributed.utils.start_local_nameserver()
@@ -273,12 +347,26 @@ if __name__ == '__main__':
             cum_time += res.get_runs_by_id(c)[-1]["info"]["runtime"]
             wall_clock_time.append(cum_time)
 
-        lc_hyperband = []
-        for r in res.get_all_runs():
-            c = r["config_id"]
-            lc_hyperband.append(res.get_runs_by_id(c)[-1]["info"]["lc"])
 
         incumbent_performance = traj["losses"]
 
+        f, (ax1, ax2) = plt.subplots(nrows=2, sharey=False)
+        ax1.set_xlabel("Wall Clock Time")
+        ax1.set_ylabel("Incumbent Performance")
+        ax1.plot(wall_clock_time, incumbent_performance)
+        ax1.set_title('Hyperband')
         # TODO: save and plot the wall clock time and the validation of the incumbent after each iteration here
 
+        lc_hyperband = []
+        for i, r in enumerate(res.get_all_runs()):
+            c = r["config_id"]
+            lc_hyperband.append(res.get_runs_by_id(c)[-1]["info"]["lc"])
+
+            ax2.plot(range(len(res.get_runs_by_id(c)[-1]["info"]["lc"])), lc_hyperband[i])
+            ax2.set_xlabel("No of Iterations")
+            ax2.set_ylabel("Error")
+            ax2.set_title('Hyperband learning curves')
+
+        plt.tight_layout()
+        f.savefig('Hyperband.png')
+        plt.show()
