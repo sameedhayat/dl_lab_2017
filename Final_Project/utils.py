@@ -18,6 +18,8 @@ import tensorflow.contrib.slim as slim
 
 def load_mnist(dataset_name):
     data_dir = os.path.join("./data", dataset_name)
+    if not os.path.exists(data_dir):
+        download_mnist()
 
     def extract_data(filename, num_data, head_size, data_size):
         with gzip.open(filename) as bytestream:
@@ -55,6 +57,7 @@ def load_mnist(dataset_name):
         y_vec[i, y[i]] = 1.0
     return X / 255., y_vec
 
+
 def get_data_set(name="train", cifar=10):
     x = None
     y = None
@@ -63,8 +66,10 @@ def get_data_set(name="train", cifar=10):
     # maybe_download_and_extract()
 
     folder_name = "cifar_10" if cifar == 10 else "cifar_100"
+    if not os.path.exists("./data/cifar_10"):
+        maybe_download_and_extract_cifar()
 
-    f = open('./data_set/'+folder_name+'/batches.meta', 'rb')
+    f = open('./data/'+folder_name+'/batches.meta', 'rb')
     datadict = pickle.load(f, encoding='latin1')
     f.close()
     l = datadict['label_names']
@@ -206,3 +211,46 @@ def discrete_cmap(N, base_cmap=None):
     color_list = base(np.linspace(0, 1, N))
     cmap_name = base.name + str(N)
     return base.from_list(cmap_name, color_list, N)
+
+
+def download_mnist():
+    dataset_dir = os.path.dirname(os.path.abspath(__file__))
+    url_base = 'http://yann.lecun.com/exdb/mnist/'
+    key_file = {
+        'train_img': 'train-images-idx3-ubyte.gz',
+        'train_label': 'train-labels-idx1-ubyte.gz',
+        'test_img': 't10k-images-idx3-ubyte.gz',
+        'test_label': 't10k-labels-idx1-ubyte.gz'
+    }
+    for v in key_file.values():
+        file_path = dataset_dir + "/data/" + file_name
+
+        if os.path.exists(file_path):
+            return
+
+        print("Downloading " + file_name + " ... ")
+        urllib.request.urlretrieve(url_base + file_name, file_path)
+        print("Done")
+
+def maybe_download_and_extract_cifar():
+    main_directory = "./data/"
+    cifar_10_directory = main_directory+"cifar_10/"
+    if not os.path.exists(main_directory):
+        os.makedirs(main_directory)
+
+        url = "http://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz"
+        filename = url.split('/')[-1]
+        file_path = os.path.join(main_directory, filename)
+        zip_cifar_10 = file_path
+        file_path, _ = urlretrieve(url=url, filename=file_path, reporthook=_print_download_progress)
+
+        print()
+        print("Download finished. Extracting files.")
+        if file_path.endswith(".zip"):
+            zipfile.ZipFile(file=file_path, mode="r").extractall(main_directory)
+        elif file_path.endswith((".tar.gz", ".tgz")):
+            tarfile.open(name=file_path, mode="r:gz").extractall(main_directory)
+        print("Done.")
+
+        os.rename(main_directory+"./cifar-10-batches-py", cifar_10_directory)
+        os.remove(zip_cifar_10)
