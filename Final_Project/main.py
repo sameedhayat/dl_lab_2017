@@ -2,19 +2,10 @@ import os
 
 ## GAN Variants
 from GAN import GAN
-from CGAN import CGAN
 from infoGAN import infoGAN
-from ACGAN import ACGAN
-from EBGAN import EBGAN
-from WGAN import WGAN
-from WGAN_GP import WGAN_GP
-from DRAGAN import DRAGAN
-from LSGAN import LSGAN
-from BEGAN import BEGAN
 
 ## VAE Variants
 from VAE import VAE
-from CVAE import CVAE
 
 from utils import show_all_variables
 from utils import check_folder
@@ -28,9 +19,9 @@ def parse_args():
     parser = argparse.ArgumentParser(description=desc)
 
     parser.add_argument('--gan_type', type=str, default='GAN',
-                        choices=['GAN', 'CGAN', 'infoGAN', 'ACGAN', 'EBGAN', 'BEGAN', 'WGAN', 'WGAN_GP', 'DRAGAN', 'LSGAN', 'VAE', 'CVAE'],
+                        choices=['GAN','VAE'],
                         help='The type of GAN', required=True)
-    parser.add_argument('--dataset', type=str, default='mnist', choices=['mnist', 'fashion-mnist', 'celebA', 'cifar'],
+    parser.add_argument('--dataset', type=str, default='mnist', choices=['mnist', 'cifar'],
                         help='The name of dataset')
     parser.add_argument('--epoch', type=int, default=20, help='The number of epochs to run')
     parser.add_argument('--batch_size', type=int, default=64, help='The size of batch')
