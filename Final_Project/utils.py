@@ -3,6 +3,7 @@ Most codes from https://github.com/carpedm20/DCGAN-tensorflow
 """
 from __future__ import division
 import math
+import sys
 import random
 import pprint
 import scipy.misc
@@ -12,6 +13,9 @@ from six.moves import xrange
 import matplotlib.pyplot as plt
 import os, gzip
 import pickle
+import tarfile
+import zipfile
+from urllib.request import urlretrieve
 
 import tensorflow as tf
 import tensorflow.contrib.slim as slim
@@ -76,7 +80,7 @@ def get_data_set(name="train", cifar=10):
 
     if name is "train":
         for i in range(5):
-            f = open('./data_set/'+folder_name+'/data_batch_' + str(i + 1), 'rb')
+            f = open('./data/'+folder_name+'/data_batch_' + str(i + 1), 'rb')
             datadict = pickle.load(f, encoding='latin1')
             f.close()
 
@@ -96,7 +100,7 @@ def get_data_set(name="train", cifar=10):
                 y = np.concatenate((y, _Y), axis=0)
 
     elif name is "test":
-        f = open('./data_set/'+folder_name+'/test_batch', 'rb')
+        f = open('./data/'+folder_name+'/test_batch', 'rb')
         datadict = pickle.load(f, encoding='latin1')
         f.close()
 
@@ -229,28 +233,36 @@ def download_mnist():
             return
 
         print("Downloading " + file_name + " ... ")
-        urllib.request.urlretrieve(url_base + file_name, file_path)
+        urlretrieve(url_base + file_name, file_path)
         print("Done")
 
+def _print_download_progress(count, block_size, total_size):
+    pct_complete = float(count * block_size) / total_size
+    msg = "\r- Download progress: {0:.1%}".format(pct_complete)
+    sys.stdout.write(msg)
+    sys.stdout.flush()
+
+
 def maybe_download_and_extract_cifar():
+
     main_directory = "./data/"
     cifar_10_directory = main_directory+"cifar_10/"
     if not os.path.exists(main_directory):
         os.makedirs(main_directory)
 
-        url = "http://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz"
-        filename = url.split('/')[-1]
-        file_path = os.path.join(main_directory, filename)
-        zip_cifar_10 = file_path
-        file_path, _ = urlretrieve(url=url, filename=file_path, reporthook=_print_download_progress)
+    url = "http://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz"
+    filename = url.split('/')[-1]
+    file_path = os.path.join(main_directory, filename)
+    zip_cifar_10 = file_path
+    file_path, _ = urlretrieve(url=url, filename=file_path, reporthook=_print_download_progress)
 
-        print()
-        print("Download finished. Extracting files.")
-        if file_path.endswith(".zip"):
-            zipfile.ZipFile(file=file_path, mode="r").extractall(main_directory)
-        elif file_path.endswith((".tar.gz", ".tgz")):
-            tarfile.open(name=file_path, mode="r:gz").extractall(main_directory)
-        print("Done.")
+    print()
+    print("Download finished. Extracting files.")
+    if file_path.endswith(".zip"):
+        zipfile.ZipFile(file=file_path, mode="r").extractall(main_directory)
+    elif file_path.endswith((".tar.gz", ".tgz")):
+        tarfile.open(name=file_path, mode="r:gz").extractall(main_directory)
+    print("Done.")
 
-        os.rename(main_directory+"./cifar-10-batches-py", cifar_10_directory)
-        os.remove(zip_cifar_10)
+    os.rename(main_directory+"./cifar-10-batches-py", cifar_10_directory)
+    os.remove(zip_cifar_10)
