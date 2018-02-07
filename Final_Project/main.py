@@ -65,8 +65,7 @@ def main():
       exit()
 
     # open session
-    models = [GAN, CGAN, infoGAN, ACGAN, EBGAN, WGAN, WGAN_GP, DRAGAN,
-              LSGAN, BEGAN, VAE, CVAE]
+    models = [GAN, VAE]
     with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess:
         # declare instance for GAN
 

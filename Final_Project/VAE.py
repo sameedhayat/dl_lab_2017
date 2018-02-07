@@ -44,6 +44,30 @@ class VAE(object):
 
             # get number of batches for a single epoch
             self.num_batches = len(self.data_X) // self.batch_size
+
+        elif dataset_name == 'cifar':
+            # parameters
+            self.input_height = 32
+            self.input_width = 32
+            self.output_height = 32
+            self.output_width = 32
+
+            self.z_dim = z_dim  # dimension of noise-vector
+            self.c_dim = 3
+
+            # train
+            self.learning_rate = 0.0002
+            self.beta1 = 0.5
+
+            # test
+            self.sample_num = 64  # number of generated images to be saved
+
+            # load cifar
+            self.data_X, self.data_y = get_data_set()
+
+            # get number of batches for a single epoch
+            self.num_batches = len(self.data_X) // self.batch_size
+
         else:
             raise NotImplementedError
 
@@ -51,36 +75,74 @@ class VAE(object):
     def encoder(self, x, is_training=True, reuse=False):
         # Network Architecture is exactly same as in infoGAN (https://arxiv.org/abs/1606.03657)
         # Architecture : (64)4c2s-(128)4c2s_BL-FC1024_BL-FC62*4
-        with tf.variable_scope("encoder", reuse=reuse):
+        if self.dataset_name == 'mnist':
+            with tf.variable_scope("encoder", reuse=reuse):
+                net = lrelu(conv2d(x, 64, 4, 4, 2, 2, name='en_conv1'))
+                net = lrelu(bn(conv2d(net, 128, 4, 4, 2, 2, name='en_conv2'), is_training=is_training, scope='en_bn2'))
+                net = tf.reshape(net, [self.batch_size, -1])
+                net = lrelu(bn(linear(net, 1024, scope='en_fc3'), is_training=is_training, scope='en_bn3'))
+                gaussian_params = linear(net, 2 * self.z_dim, scope='en_fc4')
 
-            net = lrelu(conv2d(x, 64, 4, 4, 2, 2, name='en_conv1'))
-            net = lrelu(bn(conv2d(net, 128, 4, 4, 2, 2, name='en_conv2'), is_training=is_training, scope='en_bn2'))
-            net = tf.reshape(net, [self.batch_size, -1])
-            net = lrelu(bn(linear(net, 1024, scope='en_fc3'), is_training=is_training, scope='en_bn3'))
-            gaussian_params = linear(net, 2 * self.z_dim, scope='en_fc4')
+                # The mean parameter is unconstrained
+                mean = gaussian_params[:, :self.z_dim]
+                # The standard deviation must be positive. Parametrize with a softplus and
+                # add a small epsilon for numerical stability
+                stddev = 1e-6 + tf.nn.softplus(gaussian_params[:, self.z_dim:])
 
-            # The mean parameter is unconstrained
-            mean = gaussian_params[:, :self.z_dim]
-            # The standard deviation must be positive. Parametrize with a softplus and
-            # add a small epsilon for numerical stability
-            stddev = 1e-6 + tf.nn.softplus(gaussian_params[:, self.z_dim:])
+                return mean, stddev
 
-        return mean, stddev
+        elif self.dataset_name == 'cifar':
+            with tf.variable_scope("encoder", reuse=reuse):
+                net = lrelu(conv2d(x, 64, 4, 4, 2, 2, name='en_conv1'))
+                net = lrelu(bn(conv2d(net, 128, 4, 4, 2, 2, name='en_conv2'), is_training=is_training, scope='en_bn2'))
+                net = lrelu(bn(conv2d(net, 256, 4, 4, 2, 2, name='en_conv3'), is_training=is_training, scope='en_bn3'))
+                net = tf.reshape(net, [self.batch_size, -1])
+
+                gaussian_params = linear(net, 2 * self.z_dim, scope='en_fc4')
+
+                # The mean parameter is unconstrained
+                mean = gaussian_params[:, :self.z_dim]
+                # The standard deviation must be positive. Parametrize with a softplus and
+                # add a small epsilon for numerical stability
+                stddev = 1e-6 + tf.nn.softplus(gaussian_params[:, self.z_dim:])
+
+                return mean, stddev
 
     # Bernoulli decoder
     def decoder(self, z, is_training=True, reuse=False):
         # Network Architecture is exactly same as in infoGAN (https://arxiv.org/abs/1606.03657)
         # Architecture : FC1024_BR-FC7x7x128_BR-(64)4dc2s_BR-(1)4dc2s_S
-        with tf.variable_scope("decoder", reuse=reuse):
-            net = tf.nn.relu(bn(linear(z, 1024, scope='de_fc1'), is_training=is_training, scope='de_bn1'))
-            net = tf.nn.relu(bn(linear(net, 128 * 7 * 7, scope='de_fc2'), is_training=is_training, scope='de_bn2'))
-            net = tf.reshape(net, [self.batch_size, 7, 7, 128])
-            net = tf.nn.relu(
-                bn(deconv2d(net, [self.batch_size, 14, 14, 64], 4, 4, 2, 2, name='de_dc3'), is_training=is_training,
-                   scope='de_bn3'))
+        if self.dataset_name == 'mnist':
+            with tf.variable_scope("decoder", reuse=reuse):
+                net = tf.nn.relu(bn(linear(z, 1024, scope='de_fc1'), is_training=is_training, scope='de_bn1'))
+                net = tf.nn.relu(bn(linear(net, 128 * 7 * 7, scope='de_fc2'), is_training=is_training, scope='de_bn2'))
+                net = tf.reshape(net, [self.batch_size, 7, 7, 128])
+                net = tf.nn.relu(
+                    bn(deconv2d(net, [self.batch_size, 14, 14, 64], 4, 4, 2, 2, name='de_dc3'), is_training=is_training,
+                       scope='de_bn3'))
 
-            out = tf.nn.sigmoid(deconv2d(net, [self.batch_size, 28, 28, 1], 4, 4, 2, 2, name='de_dc4'))
-            return out
+                out = tf.nn.sigmoid(deconv2d(net, [self.batch_size, 28, 28, 1], 4, 4, 2, 2, name='de_dc4'))
+                return out
+
+        elif self.dataset_name == 'cifar':
+            with tf.variable_scope("decoder", reuse=reuse):
+                net = tf.nn.relu(bn(linear(z, 448 * 2 * 2, scope='de_fc1'), is_training=is_training, scope='de_bn1'))
+                net = tf.reshape(net, [self.batch_size, 2, 2, 448])
+
+                net = tf.nn.relu(
+                    bn(deconv2d(net, [self.batch_size, 4, 4, 256], 4, 4, 2, 2, name='de_dc2'), is_training=is_training,
+                       scope='de_bn2'))
+
+                net = tf.nn.relu(
+                    bn(deconv2d(net, [self.batch_size, 8, 8, 128], 4, 4, 2, 2, name='de_dc3'), is_training=is_training,
+                       scope='de_bn3'))
+
+                net = tf.nn.relu(
+                    bn(deconv2d(net, [self.batch_size, 16, 16, 64], 4, 4, 2, 2, name='de_dc4'), is_training=is_training,
+                       scope='de_bn4'))
+
+                out = tf.nn.tanh(deconv2d(net, [self.batch_size, 32, 32, 3], 4, 4, 2, 2, name='de_dc5'))
+                return out
 
     def build_model(self):
         # some parameters
