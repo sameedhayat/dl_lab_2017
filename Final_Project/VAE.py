@@ -104,7 +104,7 @@ class VAE(object):
                 mean = gaussian_params[:, :self.z_dim]
                 # The standard deviation must be positive. Parametrize with a softplus and
                 # add a small epsilon for numerical stability
-                stddev = 0.01 + tf.nn.softplus(gaussian_params[:, self.z_dim:])
+                stddev = 1e-6 + tf.nn.softplus(gaussian_params[:, self.z_dim:])
 
                 return mean, stddev
 
@@ -141,7 +141,7 @@ class VAE(object):
                     bn(deconv2d(net, [self.batch_size, 16, 16, 64], 4, 4, 2, 2, name='de_dc4'), is_training=is_training,
                        scope='de_bn4'))
 
-                out = tf.nn.tanh(deconv2d(net, [self.batch_size, 32, 32, 3], 4, 4, 2, 2, name='de_dc5'))
+                out = tf.nn.sigmoid(deconv2d(net, [self.batch_size, 32, 32, 3], 4, 4, 2, 2, name='de_dc5'))
                 return out
 
     def build_model(self):
