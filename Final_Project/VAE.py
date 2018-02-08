@@ -137,7 +137,7 @@ class VAE(object):
                     	deconv2d(net, [self.batch_size, 8, 8, 128], 4, 4, 2, 2, name='de_dc3'))
 
                 net = tf.nn.relu(
-                    (deconv2d(net, [self.batch_size, 16, 16, 64], 4, 4, 2, 2, name='de_dc4'))
+                    (deconv2d(net, [self.batch_size, 16, 16, 64], 4, 4, 2, 2, name='de_dc4')))
 
                 out = tf.nn.tanh(deconv2d(net, [self.batch_size, 32, 32, 3], 4, 4, 2, 2, name='de_dc5'))
                 return out
