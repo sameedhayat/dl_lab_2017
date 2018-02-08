@@ -56,7 +56,7 @@ class VAE(object):
             self.c_dim = 3
 
             # train
-            self.learning_rate = 0.01
+            self.learning_rate = 0.0002
             self.beta1 = 0.5
 
             # test
