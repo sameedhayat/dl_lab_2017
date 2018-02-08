@@ -104,7 +104,7 @@ class VAE(object):
                 mean = gaussian_params[:, :self.z_dim]
                 # The standard deviation must be positive. Parametrize with a softplus and
                 # add a small epsilon for numerical stability
-                stddev = 1e-6 + tf.nn.softplus(gaussian_params[:, self.z_dim:])
+                stddev = 0.1 + tf.nn.softplus(gaussian_params[:, self.z_dim:])
 
                 return mean, stddev
 
