@@ -96,7 +96,7 @@ class VAE(object):
                 net = lrelu(conv2d(x, 64, 4, 4, 2, 2, name='en_conv1'))
                 net = lrelu(bn(conv2d(net, 128, 4, 4, 2, 2, name='en_conv2'), is_training=is_training, scope='en_bn2'))
                 net = lrelu(bn(conv2d(net, 256, 4, 4, 2, 2, name='en_conv3'), is_training=is_training, scope='en_bn3'))
-                #net = tf.reshape(net, [self.batch_size, -1])
+                net = tf.reshape(net, [self.batch_size, -1])
 
                 gaussian_params = linear(net, 2 * self.z_dim, scope='en_fc4')
 
@@ -134,14 +134,12 @@ class VAE(object):
                        scope='de_bn2'))
 
                 net = tf.nn.relu(
-                    bn(deconv2d(net, [self.batch_size, 8, 8, 128], 4, 4, 2, 2, name='de_dc3'), is_training=is_training,
-                       scope='de_bn3'))
+                    	deconv2d(net, [self.batch_size, 8, 8, 128], 4, 4, 2, 2, name='de_dc3'))
 
                 net = tf.nn.relu(
-                    bn(deconv2d(net, [self.batch_size, 16, 16, 64], 4, 4, 2, 2, name='de_dc4'), is_training=is_training,
-                       scope='de_bn4'))
+                    (deconv2d(net, [self.batch_size, 16, 16, 64], 4, 4, 2, 2, name='de_dc4'))
 
-                out = tf.nn.sigmoid(deconv2d(net, [self.batch_size, 32, 32, 3], 4, 4, 2, 2, name='de_dc5'))
+                out = tf.nn.tanh(deconv2d(net, [self.batch_size, 32, 32, 3], 4, 4, 2, 2, name='de_dc5'))
                 return out
 
     def build_model(self):
