@@ -280,19 +280,19 @@ class GAN(object):
             # show temporal results
             self.visualize_results(epoch)
 
-        with open('loss_epoch_GAN.csv', 'wb') as csvfile:
+        with open('loss_epoch_GAN.csv', 'w') as csvfile:
             spamwriter = csv.writer(csvfile, delimiter=' ')
             spamwriter.writerow(self.loss_epoch)
 
-        with open('time_epoch_GAN.csv', 'wb') as csvfile:
+        with open('time_epoch_GAN.csv', 'w') as csvfile:
             spamwriter = csv.writer(csvfile, delimiter=' ')
             spamwriter.writerow(self.time_epoch)
 
-        with open('loss_epoch_d_GAN.csv', 'wb') as csvfile:
+        with open('loss_epoch_d_GAN.csv', 'w') as csvfile:
             spamwriter = csv.writer(csvfile, delimiter=' ')
             spamwriter.writerow(self.time_epoch)
 
-        with open('loss_epoch_g_GAN.csv', 'wb') as csvfile:
+        with open('loss_epoch_g_GAN.csv', 'w') as csvfile:
             spamwriter = csv.writer(csvfile, delimiter=' ')
             spamwriter.writerow(self.time_epoch)
 

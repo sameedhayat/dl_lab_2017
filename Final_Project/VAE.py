@@ -274,13 +274,13 @@ class VAE(object):
         # save model for final step
         self.save(self.checkpoint_dir, counter)
 
-        with open('loss_epoch_VAE.csv', 'wb') as csvfile:
+        with open('loss_epoch_VAE.csv', 'w') as csvfile:
             print("Writing loss epoch")
             print(self.loss_epoch)
             spamwriter = csv.writer(csvfile, delimiter=' ')
             spamwriter.writerow(self.loss_epoch)
 
-        with open('time_epoch_VAE.csv', 'wb') as csvfile:
+        with open('time_epoch_VAE.csv', 'w') as csvfile:
             spamwriter = csv.writer(csvfile, delimiter=' ')
             spamwriter.writerow(self.time_epoch)
 
