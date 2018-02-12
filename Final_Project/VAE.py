@@ -275,6 +275,8 @@ class VAE(object):
         self.save(self.checkpoint_dir, counter)
 
         with open('loss_epoch_VAE.csv', 'wb') as csvfile:
+            print("Writing loss epoch")
+            print(self.loss_epoch)
             spamwriter = csv.writer(csvfile, delimiter=' ')
             spamwriter.writerow(self.loss_epoch)
 
