@@ -4,6 +4,7 @@ import os
 import time
 import tensorflow as tf
 import numpy as np
+import csv
 
 from ops import *
 from utils import *
@@ -223,10 +224,13 @@ class VAE(object):
             counter = 1
             print(" [!] Load failed...")
 
+        self.loss_epoch = list()
+        self.time_epoch = list()
+
         # loop for epoch
         start_time = time.time()
         for epoch in range(start_epoch, self.epoch):
-
+            loss_epoch_mean = list()
             # get batch data
             for idx in range(start_batch_id, self.num_batches):
                 batch_images = self.data_X[idx*self.batch_size:(idx+1)*self.batch_size]
@@ -241,7 +245,7 @@ class VAE(object):
                 counter += 1
                 print("Epoch: [%2d] [%4d/%4d] time: %4.4f, loss: %.8f, nll: %.8f, kl: %.8f" \
                       % (epoch, idx, self.num_batches, time.time() - start_time, loss, nll_loss, kl_loss))
-
+                loss_epoch_mean.append(loss)
                 # save training results for every 300 steps
                 if np.mod(counter, 300) == 0:
                     samples = self.sess.run(self.fake_images,
@@ -258,6 +262,9 @@ class VAE(object):
             # non-zero value is only for the first epoch after loading pre-trained model
             start_batch_id = 0
 
+            self.loss_epoch.append(np.mean(loss_epoch_mean))
+            self.time_epoch.append(time.time() - start_time)
+
             # save model
             self.save(self.checkpoint_dir, counter)
 
@@ -266,6 +273,14 @@ class VAE(object):
 
         # save model for final step
         self.save(self.checkpoint_dir, counter)
+
+        with open('loss_epoch_VAE.csv', 'wb') as csvfile:
+            spamwriter = csv.writer(csvfile, delimiter=' ')
+            spamwriter.writerow(self.loss_epoch)
+
+        with open('time_epoch_VAE.csv', 'wb') as csvfile:
+            spamwriter = csv.writer(csvfile, delimiter=' ')
+            spamwriter.writerow(self.time_epoch)
 
     def visualize_results(self, epoch):
         tot_num_samples = min(self.sample_num, self.batch_size)

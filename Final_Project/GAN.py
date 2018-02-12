@@ -222,8 +222,8 @@ class GAN(object):
             start_batch_id = 0
             counter = 1
             print(" [!] Load failed...")
-	
-	    self.loss_epoch = list()
+
+        self.loss_epoch = list()
         self.loss_epoch_d = list()
         self.loss_epoch_g = list()
         self.time_epoch = list()
