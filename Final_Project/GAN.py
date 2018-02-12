@@ -221,10 +221,17 @@ class GAN(object):
             start_batch_id = 0
             counter = 1
             print(" [!] Load failed...")
-
+	
+	    self.loss_epoch = list()
+        self.loss_epoch_d = list()
+        self.loss_epoch_g = list()
+        self.time_epoch = list()
         # loop for epoch
         start_time = time.time()
         for epoch in range(start_epoch, self.epoch):
+            loss_epoch_mean = list()
+            loss_epoch_d_mean = list()
+            loss_epoch_g_mean = list()
 
             # get batch data
             for idx in range(start_batch_id, self.num_batches):
@@ -239,11 +246,15 @@ class GAN(object):
                 _, summary_str, g_loss = self.sess.run([self.g_optim, self.g_sum, self.g_loss], feed_dict={self.z: batch_z})
                 self.writer.add_summary(summary_str, counter)
 
+                loss_epoch_d_mean.append(d_loss)
+                loss_epoch_g_mean.append(g_loss)
+                loss_epoch_mean.append(d_loss + g_loss)
                 # display training status
                 counter += 1
                 print("Epoch: [%2d] [%4d/%4d] time: %4.4f, d_loss: %.8f, g_loss: %.8f" \
                       % (epoch, idx, self.num_batches, time.time() - start_time, d_loss, g_loss))
-
+		
+		
                 # save training results for every 300 steps
                 if np.mod(counter, 300) == 0:
                     samples = self.sess.run(self.fake_images, feed_dict={self.z: self.sample_z})
@@ -254,6 +265,10 @@ class GAN(object):
                                 './' + check_folder(self.result_dir + '/' + self.model_dir) + '/' + self.model_name + '_train_{:02d}_{:04d}.png'.format(
                                     epoch, idx))
 
+            self.loss_epoch.append(np.mean(loss_epoch_mean))
+            self.loss_epoch_d.append(np.mean(loss_epoch_d_mean))
+            self.loss_epoch_g.append(np.mean(loss_epoch_g_mean))
+            self.time_epoch.append(time.time() - start_time)
             # After an epoch, start_batch_id is set to zero
             # non-zero value is only for the first epoch after loading pre-trained model
             start_batch_id = 0
@@ -263,6 +278,23 @@ class GAN(object):
 
             # show temporal results
             self.visualize_results(epoch)
+
+        with open('loss_epoch_GAN.csv', 'wb') as csvfile:
+            spamwriter = csv.writer(csvfile, delimiter=' ')
+            spamwriter.writerow(self.loss_epoch)
+
+        with open('time_epoch_GAN.csv', 'wb') as csvfile:
+            spamwriter = csv.writer(csvfile, delimiter=' ')
+            spamwriter.writerow(self.time_epoch)
+
+        with open('loss_epoch_d_GAN.csv', 'wb') as csvfile:
+            spamwriter = csv.writer(csvfile, delimiter=' ')
+            spamwriter.writerow(self.time_epoch)
+
+        with open('loss_epoch_g_GAN.csv', 'wb') as csvfile:
+            spamwriter = csv.writer(csvfile, delimiter=' ')
+            spamwriter.writerow(self.time_epoch)
+
 
         # save model for final step
         self.save(self.checkpoint_dir, counter)
