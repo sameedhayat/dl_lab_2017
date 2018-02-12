@@ -4,6 +4,7 @@ import os
 import time
 import tensorflow as tf
 import numpy as np
+import csv
 
 from ops import *
 from utils import *
