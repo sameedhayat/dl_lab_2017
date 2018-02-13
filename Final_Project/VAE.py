@@ -82,6 +82,7 @@ class VAE(object):
                 net = lrelu(bn(conv2d(net, 128, 4, 4, 2, 2, name='en_conv2'), is_training=is_training, scope='en_bn2'))
                 net = tf.reshape(net, [self.batch_size, -1])
                 net = lrelu(bn(linear(net, 1024, scope='en_fc3'), is_training=is_training, scope='en_bn3'))
+
                 gaussian_params = linear(net, 2 * self.z_dim, scope='en_fc4')
 
                 # The mean parameter is unconstrained

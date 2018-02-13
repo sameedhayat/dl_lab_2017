@@ -290,11 +290,11 @@ class GAN(object):
 
         with open('loss_epoch_d_GAN.csv', 'w') as csvfile:
             spamwriter = csv.writer(csvfile, delimiter=' ')
-            spamwriter.writerow(self.time_epoch)
+            spamwriter.writerow(self.loss_epoch_d)
 
         with open('loss_epoch_g_GAN.csv', 'w') as csvfile:
             spamwriter = csv.writer(csvfile, delimiter=' ')
-            spamwriter.writerow(self.time_epoch)
+            spamwriter.writerow(self.loss_epoch_g)
 
 
         # save model for final step
