@@ -250,9 +250,9 @@ class GAN(object):
                 _, summary_str, g_loss = self.sess.run([self.g_optim, self.g_sum, self.g_loss], feed_dict={self.z: batch_z})
                 self.writer.add_summary(summary_str, counter)
 
-                loss_epoch_d.append(d_loss)
-                loss_epoch_g.append(g_loss)
-                loss_epoch.append(d_loss + g_loss)
+                self.loss_epoch_d.append(d_loss)
+                self.loss_epoch_g.append(g_loss)
+                self.loss_epoch.append(d_loss + g_loss)
                 # display training status
                 counter += 1
                 print("Epoch: [%2d] [%4d/%4d] time: %4.4f, d_loss: %.8f, g_loss: %.8f" \
